@@ -1,6 +1,37 @@
 import React, { useState, useEffect } from 'react';
 import { Camera, Send, X, Loader2 } from 'lucide-react';
 
+// Replace this with your company's API key
+const COMPANY_API_KEY = 'sk-musuGhn3-EwAmOWYcyNMBik9QWQoNpCK9WcNoGnalUT3BlbkFJLvhXz05OIkISy1tbWg_s-k1og8iZ9Dtd3vNRYmZh0A';
+
+async function query(imageData: string) {
+  const response = await fetch(
+    "https://api.openai.com/v1/chat/completions",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${COMPANY_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: "gpt-4-vision-preview",
+        messages: [
+          {
+            role: "user",
+            content: [
+              { type: "text", text: "What's in this image? Provide a brief description." },
+              { type: "image_url", image_url: { url: imageData } }
+            ]
+          }
+        ],
+        max_tokens: 300
+      })
+    }
+  );
+  const result = await response.json();
+  return result.choices[0].message.content;
+}
+
 function App() {
   const [isSelecting, setIsSelecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -103,15 +134,10 @@ function App() {
     if (capturedImage) {
       setIsLoading(true);
       try {
-        // Simulating API call to AI service
-        const response = await new Promise<string>((resolve) => {
-          setTimeout(() => {
-            resolve("This image appears to be a screenshot of a webpage. It contains text and possibly some graphical elements. Without more specific details about the content, I can't provide a more detailed analysis. Is there a particular aspect of the image you'd like me to focus on?");
-          }, 2000);
-        });
+        const response = await query(capturedImage);
         setAiResponse(response);
       } catch (error) {
-        setError('Failed to get AI response. Please try again.');
+        setError('Failed to get AI response. Please try again later.');
       } finally {
         setIsLoading(false);
       }
