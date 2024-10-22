@@ -21,20 +21,19 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       return true; // Indicates that the response is sent asynchronously
     } else if (request.action === 'captureScreenshot') {
       chrome.tabs.captureVisibleTab(null, { format: 'png' }, (dataUrl) => {
-        if (sender.tab && sender.tab.id) {
-          chrome.tabs.sendMessage(sender.tab.id, {
-            action: 'processScreenshot',
-            dataUrl: dataUrl,
-            area: request.area
-          });
-        }
+        chrome.tabs.sendMessage(sender.tab.id, {
+          action: 'processScreenshot',
+          dataUrl: dataUrl,
+          area: request.area
+        });
       });
       return true;
     } else if (request.action === 'screenshotCaptured') {
-      chrome.storage.local.set({ capturedImage: request.imageData }, () => {
-        chrome.runtime.sendMessage({ action: 'screenshotSaved' });
+      // Forward the captured screenshot data to the popup
+      chrome.runtime.sendMessage({
+        action: 'screenshotData',
+        imageData: request.imageData
       });
-      return true;
     }
   });
   
