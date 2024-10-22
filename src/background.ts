@@ -31,7 +31,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       });
       return true;
     } else if (request.action === 'screenshotCaptured') {
-      chrome.runtime.sendMessage(request);
+      chrome.storage.local.set({ capturedImage: request.imageData }, () => {
+        chrome.runtime.sendMessage({ action: 'screenshotSaved' });
+      });
       return true;
     }
   });

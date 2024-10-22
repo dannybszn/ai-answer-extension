@@ -3,7 +3,7 @@
   "name": "Screenshot Selector",
   "version": "1.0",
   "description": "Select an area of the page to take a screenshot",
-  "permissions": ["activeTab", "scripting", "downloads"],
+  "permissions": ["activeTab", "scripting", "downloads", "storage"],
   "host_permissions": ["<all_urls>"],
   "action": {
     "default_popup": "index.html",

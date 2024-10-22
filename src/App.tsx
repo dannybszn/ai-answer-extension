@@ -17,13 +17,29 @@ function App() {
       }
     });
 
-    chrome.runtime.onMessage.addListener((request) => {
-      if (request.action === 'screenshotCaptured') {
-        setCapturedImage(request.imageData);
+    const messageListener = (request: any) => {
+      if (request.action === 'screenshotSaved') {
+        loadSavedScreenshot();
+      }
+    };
+
+    chrome.runtime.onMessage.addListener(messageListener);
+
+    loadSavedScreenshot();
+
+    return () => {
+      chrome.runtime.onMessage.removeListener(messageListener);
+    };
+  }, []);
+
+  const loadSavedScreenshot = () => {
+    chrome.storage.local.get(['capturedImage'], (result) => {
+      if (result.capturedImage) {
+        setCapturedImage(result.capturedImage);
         setIsSelecting(false);
       }
     });
-  }, []);
+  };
 
   const isValidUrl = (url: string | undefined) => {
     return url && !url.startsWith('chrome://') && !url.startsWith('chrome-extension://');
@@ -63,6 +79,7 @@ function App() {
     setIsSelecting(true);
     setError(null);
     setCapturedImage(null);
+    chrome.storage.local.remove(['capturedImage']);
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       const activeTab = tabs[0];
       if (activeTab.id && isValidUrl(activeTab.url)) {
@@ -87,6 +104,11 @@ function App() {
       a.download = 'screenshot.png';
       a.click();
     }
+  };
+
+  const handleClear = () => {
+    setCapturedImage(null);
+    chrome.storage.local.remove(['capturedImage']);
   };
 
   return (
@@ -120,12 +142,20 @@ function App() {
       {capturedImage && (
         <div className="mt-4">
           <img src={capturedImage} alt="Captured screenshot" className="w-full mb-2" />
-          <button
-            onClick={handleDownload}
-            className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded"
-          >
-            Download
-          </button>
+          <div className="flex space-x-2">
+            <button
+              onClick={handleDownload}
+              className="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded"
+            >
+              Download
+            </button>
+            <button
+              onClick={handleClear}
+              className="flex-1 bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"
+            >
+              Clear
+            </button>
+          </div>
         </div>
       )}
     </div>
