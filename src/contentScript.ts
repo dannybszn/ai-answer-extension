@@ -80,15 +80,28 @@ if (!window.screenshotSelectorInitialized) {
         canvas.height = area.height;
         const ctx = canvas.getContext('2d');
         if (ctx) {
-          ctx.drawImage(img, area.x, area.y, area.width, area.height, 0, 0, area.width, area.height);
+          const scale = window.devicePixelRatio;
+          ctx.drawImage(
+            img,
+            area.x * scale,
+            area.y * scale,
+            area.width * scale,
+            area.height * scale,
+            0,
+            0,
+            area.width,
+            area.height
+          );
           canvas.toBlob((blob) => {
             if (blob) {
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement('a');
-              a.href = url;
-              a.download = 'screenshot.png';
-              a.click();
-              URL.revokeObjectURL(url);
+              const reader = new FileReader();
+              reader.onloadend = () => {
+                chrome.runtime.sendMessage({
+                  action: 'screenshotCaptured',
+                  imageData: reader.result
+                });
+              };
+              reader.readAsDataURL(blob);
             }
           }, 'image/png');
         }
